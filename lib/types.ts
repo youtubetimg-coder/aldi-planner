@@ -15,6 +15,10 @@ export interface TrainingModule {
   scheduledDate: string;
   rationale: string;
   relatedEventId?: string;
+  /** Tanggal rencana yang diinput user (YYYY-MM-DD). */
+  plannedDate?: string;
+  /** Tanggal realisasi pelaksanaan (YYYY-MM-DD). */
+  actualDate?: string;
 }
 
 export type PlannerStatus = "processing" | "completed" | "failed";

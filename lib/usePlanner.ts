@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
-import type { PlannerData, PlannerStatus } from "@/lib/types";
+import type { PlannerData, PlannerStatus, TrainingModule } from "@/lib/types";
 
 interface PlannerTarget {
   uid: string;
@@ -16,6 +16,11 @@ interface UsePlannerResult {
   uploadCalendar: (target: PlannerTarget, file: File) => Promise<void>;
   listenTo: (target: PlannerTarget) => void;
   reset: () => void;
+  updateModule: (
+    campusId: string,
+    moduleId: string,
+    patch: Partial<Pick<TrainingModule, "plannedDate" | "actualDate">>
+  ) => Promise<void>;
 }
 
 /**
@@ -171,5 +176,41 @@ export function usePlanner(): UsePlannerResult {
     setTarget(null);
   }, []);
 
-  return { status, planner, error, uploadCalendar, listenTo, reset };
+  const updateModule = useCallback(
+    async (
+      campusId: string,
+      moduleId: string,
+      patch: Partial<Pick<TrainingModule, "plannedDate" | "actualDate">>
+    ) => {
+      if (!isSupabaseConfigured) return;
+      const supabase = getSupabase();
+      const { data, error: fetchErr } = await supabase
+        .from("planners")
+        .select("training_modules")
+        .eq("campus_id", campusId)
+        .maybeSingle();
+      if (fetchErr || !data) return;
+      const modules = (data.training_modules ?? []) as TrainingModule[];
+      const updated = modules.map((m) =>
+        m.id === moduleId ? { ...m, ...patch } : m
+      );
+      await supabase
+        .from("planners")
+        .update({ training_modules: updated })
+        .eq("campus_id", campusId);
+      setPlanner((prev) =>
+        prev
+          ? {
+              ...prev,
+              trainingModules: prev.trainingModules.map((m) =>
+                m.id === moduleId ? { ...m, ...patch } : m
+              ),
+            }
+          : prev
+      );
+    },
+    []
+  );
+
+  return { status, planner, error, uploadCalendar, listenTo, reset, updateModule };
 }

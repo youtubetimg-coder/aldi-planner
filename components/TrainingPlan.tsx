@@ -1,9 +1,15 @@
-import { GraduationCap } from "lucide-react";
+import { useState } from "react";
+import { CalendarClock, CalendarCheck, GraduationCap } from "lucide-react";
 import type { ModuleCategory, TrainingModule } from "@/lib/mockData";
 import { formatDate } from "@/lib/format";
 
 interface TrainingPlanProps {
   modules: TrainingModule[];
+  /** Dipanggil saat user mengubah tanggal rencana/realisasi. */
+  onUpdateModule?: (
+    moduleId: string,
+    patch: Partial<Pick<TrainingModule, "plannedDate" | "actualDate">>
+  ) => void;
 }
 
 function CategoryBadge({ category }: { category: ModuleCategory }) {
@@ -26,7 +32,74 @@ function CategoryBadge({ category }: { category: ModuleCategory }) {
   );
 }
 
-export default function TrainingPlan({ modules }: TrainingPlanProps) {
+function ModuleCard({
+  module,
+  onUpdateModule,
+}: {
+  module: TrainingModule;
+  onUpdateModule?: TrainingPlanProps["onUpdateModule"];
+}) {
+  const [planned, setPlanned] = useState(module.plannedDate ?? "");
+  const [actual, setActual] = useState(module.actualDate ?? "");
+
+  const inputCls =
+    "h-8 w-[130px] rounded-sm border border-line bg-white px-2 font-mono text-[11px] text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20";
+
+  return (
+    <article className="rounded-sm border border-line bg-[#FFFCF5] p-5 transition-colors hover:bg-surface2">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-xs font-medium text-copper">
+            {formatDate(module.scheduledDate)}
+          </p>
+          <h3 className="mt-1 text-sm font-semibold text-ink">
+            {module.moduleName}
+          </h3>
+        </div>
+        <CategoryBadge category={module.category} />
+      </div>
+      <p className="mt-3 text-xs leading-5 text-inksoft">
+        {module.rationale}
+      </p>
+      {onUpdateModule && (
+        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-line pt-3">
+          <label className="flex items-center gap-2">
+            <CalendarClock className="h-3.5 w-3.5 text-inkmute" />
+            <span className="text-[11px] font-medium text-inksoft">
+              Rencana
+            </span>
+            <input
+              type="date"
+              value={planned}
+              onChange={(e) => {
+                setPlanned(e.target.value);
+                onUpdateModule(module.id, { plannedDate: e.target.value });
+              }}
+              className={inputCls}
+            />
+          </label>
+          <label className="flex items-center gap-2">
+            <CalendarCheck className="h-3.5 w-3.5 text-inkmute" />
+            <span className="text-[11px] font-medium text-inksoft">
+              Realisasi
+            </span>
+            <input
+              type="date"
+              value={actual}
+              onChange={(e) => {
+                setActual(e.target.value);
+                onUpdateModule(module.id, { actualDate: e.target.value });
+              }}
+              className={inputCls}
+            />
+          </label>
+        </div>
+      )}
+    </article>
+  );
+}
+
+export default function TrainingPlan({ modules, onUpdateModule }: TrainingPlanProps) {
   const sorted = [...modules].sort((a, b) =>
     a.scheduledDate.localeCompare(b.scheduledDate)
   );
@@ -62,25 +135,11 @@ export default function TrainingPlan({ modules }: TrainingPlanProps) {
 
       <div className="space-y-4">
         {sorted.map((module) => (
-          <article
+          <ModuleCard
             key={module.id}
-            className="rounded-sm border border-line bg-[#FFFCF5] p-5 transition-colors hover:bg-surface2"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-mono text-xs font-medium text-copper">
-                  {formatDate(module.scheduledDate)}
-                </p>
-                <h3 className="mt-1 text-sm font-semibold text-ink">
-                  {module.moduleName}
-                </h3>
-              </div>
-              <CategoryBadge category={module.category} />
-            </div>
-            <p className="mt-3 text-xs leading-5 text-inksoft">
-              {module.rationale}
-            </p>
-          </article>
+            module={module}
+            onUpdateModule={onUpdateModule}
+          />
         ))}
       </div>
     </section>

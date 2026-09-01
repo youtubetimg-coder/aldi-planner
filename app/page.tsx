@@ -28,7 +28,7 @@ export default function HomePage() {
     useAuth();
   const { campuses, loading: campusesLoading, error: campusesError, addCampus, deleteCampus } =
     useCampuses(user?.id ?? null);
-  const { status, planner, error: plannerError, uploadCalendar, listenTo, reset } =
+  const { status, planner, error: plannerError, uploadCalendar, listenTo, reset, updateModule } =
     usePlanner();
   const { settings, saveGeminiKey, error: settingsError } = useSettings(user?.id ?? null);
 
@@ -148,7 +148,15 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <AcademicTimeline events={events} />
-              <TrainingPlan modules={modules} />
+              <TrainingPlan
+                modules={modules}
+                onUpdateModule={
+                  demoMode || !activeCampus
+                    ? undefined
+                    : (moduleId, patch) =>
+                        updateModule(activeCampus.id, moduleId, patch)
+                }
+              />
             </div>
           </div>
         ) : view === "processing" ? (
