@@ -141,9 +141,15 @@ async function extractWithGemini(
   mimeType: string,
   bytes: Uint8Array
 ): Promise<AiExtractionResult> {
+  // Timeout 90 detik — tanpa ini, panggilan Gemini yang hang membuat Edge
+  // Function mati tanpa sempat menandai status "failed", sehingga baris
+  // kampus stuck di "processing" selamanya.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90_000);
   const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: controller.signal,
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
       contents: [
@@ -165,6 +171,7 @@ async function extractWithGemini(
       },
     }),
   });
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     const detail = await response.text();
