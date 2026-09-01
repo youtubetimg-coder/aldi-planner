@@ -20,8 +20,9 @@ jobs:
       - name: Install Supabase CLI
         run: |
           curl -sL "https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz" -o supabase.tar.gz
-          tar -xzf supabase.tar.gz supabase
-          sudo mv supabase /usr/local/bin/
+          tar -xzf supabase.tar.gz
+          chmod +x supabase
+          sudo mv -f supabase /usr/local/bin/
           supabase --version
 
       - name: Install psql client
