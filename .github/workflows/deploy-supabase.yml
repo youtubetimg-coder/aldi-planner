@@ -19,8 +19,10 @@ jobs:
 
       - name: Install Supabase CLI
         run: |
-          curl -sSL https://supabase.com/install/cli.sh | bash
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          curl -sL "https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz" -o supabase.tar.gz
+          tar -xzf supabase.tar.gz supabase
+          sudo mv supabase /usr/local/bin/
+          supabase --version
 
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
