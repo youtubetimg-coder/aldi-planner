@@ -44,16 +44,19 @@ alter table public.campuses enable row level security;
 alter table public.planners enable row level security;
 alter table public.user_settings enable row level security;
 
+drop policy if exists "Users manage their own campuses" on public.campuses;
 create policy "Users manage their own campuses"
   on public.campuses for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users manage their own planners" on public.planners;
 create policy "Users manage their own planners"
   on public.planners for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users manage their own settings" on public.user_settings;
 create policy "Users manage their own settings"
   on public.user_settings for all
   using (auth.uid() = user_id)
@@ -67,6 +70,7 @@ values ('calendars', 'calendars', false)
 on conflict (id) do nothing;
 
 -- Path konvensi: calendars/{user_id}/{campus_id}/{timestamp}-{filename}
+drop policy if exists "Users upload into their own folder" on storage.objects;
 create policy "Users upload into their own folder"
   on storage.objects for insert
   with check (
@@ -74,6 +78,7 @@ create policy "Users upload into their own folder"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Users read their own files" on storage.objects;
 create policy "Users read their own files"
   on storage.objects for select
   using (
@@ -81,6 +86,7 @@ create policy "Users read their own files"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Users delete their own files" on storage.objects;
 create policy "Users delete their own files"
   on storage.objects for delete
   using (

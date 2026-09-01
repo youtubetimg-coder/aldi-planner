@@ -9,6 +9,7 @@ create table if not exists public.user_settings (
 
 alter table public.user_settings enable row level security;
 
+drop policy if exists "Users manage their own settings" on public.user_settings;
 create policy "Users manage their own settings"
   on public.user_settings for all
   using (auth.uid() = user_id)
