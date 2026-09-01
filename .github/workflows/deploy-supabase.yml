@@ -35,7 +35,7 @@ jobs:
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
           PGPASSWORD="$SUPABASE_DB_PASSWORD" psql \
-            "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.${SUPABASE_PROJECT_REF}.supabase.co:5432/postgres" \
+            "host=db.${SUPABASE_PROJECT_REF}.supabase.co port=5432 dbname=postgres user=postgres sslmode=require" \
             -v ON_ERROR_STOP=1 -f supabase/schema.sql -f supabase/byok.sql
 
       - name: Deploy Edge Function
