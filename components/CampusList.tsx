@@ -8,6 +8,7 @@ import {
   Loader2,
   Plus,
   School,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import type { Campus } from "@/lib/types";
@@ -18,6 +19,7 @@ interface CampusListProps {
   error: string | null;
   onAddCampus: (name: string, city?: string) => Promise<string | null>;
   onOpenCampus: (campus: Campus) => void;
+  onDeleteCampus: (id: string) => Promise<boolean>;
 }
 
 function StatusIndicator({ status }: { status?: Campus["plannerStatus"] }) {
@@ -56,11 +58,22 @@ export default function CampusList({
   error,
   onAddCampus,
   onOpenCampus,
+  onDeleteCampus,
 }: CampusListProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setDeleting(true);
+    const ok = await onDeleteCampus(id);
+    setDeleting(false);
+    if (ok) setConfirmDelete(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,7 +220,48 @@ export default function CampusList({
                 </div>
                 <div className="flex items-center justify-between">
                   <StatusIndicator status={campus.plannerStatus} />
-                  <ArrowRight className="h-4 w-4 text-inkmute transition-colors group-hover:text-forest" />
+                  <div className="flex items-center gap-2">
+                    {confirmDelete === campus.id ? (
+                      <>
+                        <button
+                          type="button"
+                          disabled={deleting}
+                          onClick={(e) => handleDelete(e, campus.id)}
+                          className="inline-flex h-7 items-center gap-1 rounded-sm border border-warn/40 bg-warn/10 px-2 text-[11px] font-medium text-warn transition-colors hover:bg-warn/20 disabled:opacity-50"
+                        >
+                          {deleting && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          Hapus?
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDelete(null);
+                          }}
+                          className="inline-flex h-7 items-center rounded-sm border border-line bg-white px-2 text-[11px] text-inkmute transition-colors hover:bg-surface2"
+                        >
+                          Batal
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDelete(campus.id);
+                          }}
+                          aria-label={`Hapus ${campus.name}`}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-sm text-inkmute transition-colors hover:bg-warn/10 hover:text-warn"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                        <ArrowRight className="h-4 w-4 text-inkmute transition-colors group-hover:text-forest" />
+                      </>
+                    )}
+                  </div>
                 </div>
               </button>
             </li>

@@ -26,7 +26,7 @@ type ViewMode = "campuses" | "upload" | "processing" | "dashboard";
 export default function HomePage() {
   const { user, loading: authLoading, error: authError, signInWithGoogle, logout } =
     useAuth();
-  const { campuses, loading: campusesLoading, error: campusesError, addCampus } =
+  const { campuses, loading: campusesLoading, error: campusesError, addCampus, deleteCampus } =
     useCampuses(user?.id ?? null);
   const { status, planner, error: plannerError, uploadCalendar, listenTo, reset } =
     usePlanner();
@@ -113,6 +113,7 @@ export default function HomePage() {
             error={campusesError}
             onAddCampus={addCampus}
             onOpenCampus={handleOpenCampus}
+            onDeleteCampus={deleteCampus}
           />
         ) : showDashboard ? (
           <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">

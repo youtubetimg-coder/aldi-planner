@@ -9,6 +9,7 @@ interface UseCampusesResult {
   loading: boolean;
   error: string | null;
   addCampus: (name: string, city?: string) => Promise<string | null>;
+  deleteCampus: (id: string) => Promise<boolean>;
 }
 
 /**
@@ -92,5 +93,28 @@ export function useCampuses(uid: string | null): UseCampusesResult {
     [uid, fetchCampuses]
   );
 
-  return { campuses, loading, error, addCampus };
+  const deleteCampus = useCallback(
+    async (id: string) => {
+      if (!uid || !isSupabaseConfigured) return false;
+      setError(null);
+      // planners terhapus otomatis via ON DELETE CASCADE (schema.sql).
+      // File kalender di Storage dibiarkan — bucket privat, tidak bocor,
+      // dan biaya minimal. ponytail: hapus file juga kalau quota storage
+      // jadi masalah.
+      const { error: deleteError } = await getSupabase()
+        .from("campuses")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        setError(deleteError.message);
+        return false;
+      }
+      setCampuses((prev) => prev.filter((c) => c.id !== id));
+      return true;
+    },
+    [uid]
+  );
+
+  return { campuses, loading, error, addCampus, deleteCampus };
 }
